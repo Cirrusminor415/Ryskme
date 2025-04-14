@@ -80,7 +80,7 @@ def generate_narrative(age, gender, descent, location, time_of_day, score, top_c
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": prompt}
             ]
