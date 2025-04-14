@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import openai
+from openai import OpenAI
 
-# Load OpenAI key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Set up OpenAI client
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 st.set_page_config(page_title="LA Crime Risk Assessment", layout="wide")
 
@@ -77,10 +77,13 @@ def generate_narrative(age, gender, descent, location, time_of_day, score, top_c
 
     Keep it concise, clear, and user-friendly. Mention the risk level and the common crimes.
     """
+
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
