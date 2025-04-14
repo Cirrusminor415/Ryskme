@@ -27,6 +27,11 @@ def load_data():
             return 'Evening'
 
     df['Time of Day'] = df['Hour'].apply(get_time_of_day)
+    
+    # Extract year and month for trend analysis
+    df['Year'] = df['DATE OCC'].dt.year
+    df['Month'] = df['DATE OCC'].dt.to_period('M').astype(str)  # e.g. '2023-07'
+    
     return df
 
 df = load_data()
@@ -77,4 +82,15 @@ if not filtered_df[['LAT', 'LON']].dropna().empty:
 else:
     st.info("No crimes found for the selected criteria.")
 
+# Historical trend by month
+st.subheader("📈 Historical Trend of Similar Crimes (Monthly)")
 
+if not filtered_df.empty:
+    trend = filtered_df.groupby('Month').size().reset_index(name='Crime Count')
+    trend = trend.sort_values('Month')
+    fig = px.line(trend, x='Month', y='Crime Count', markers=True,
+                  title='Crime Trend Over Time', labels={'Month': 'Month', 'Crime Count': 'Number of Crimes'})
+    fig.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.info("No matching crimes to show a trend.")
