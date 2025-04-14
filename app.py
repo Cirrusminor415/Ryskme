@@ -40,23 +40,30 @@ df = load_data()
 st.title("🔍 LA Crime Risk Assessment")
 st.markdown("Estimate crime risk based on **victim demographics, location, and time of day** using LAPD data (2020–present).")
 
-# Sidebar filters
+# Sidebar filters with "All" option
 st.sidebar.header("Select Victim Info")
-age = st.sidebar.slider("Age", 10, 90, 25)
-gender = st.sidebar.selectbox("Gender", sorted(df['Vict Sex'].dropna().unique()))
-descent = st.sidebar.selectbox("Descent", sorted(df['Vict Descent'].dropna().unique()))
-location = st.sidebar.selectbox("Location (Area)", sorted(df['AREA NAME'].dropna().unique()))
-time_of_day = st.sidebar.selectbox("Time of Day", ['Morning', 'Afternoon', 'Evening', 'Late Night'])
 
-# Risk score logic
+age = st.sidebar.slider("Age", 10, 90, 25)
+gender = st.sidebar.selectbox("Gender", ['All'] + sorted(df['Vict Sex'].dropna().unique()))
+descent = st.sidebar.selectbox("Descent", ['All'] + sorted(df['Vict Descent'].dropna().unique()))
+location = st.sidebar.selectbox("Location (Area)", ['All'] + sorted(df['AREA NAME'].dropna().unique()))
+time_of_day = st.sidebar.selectbox("Time of Day", ['All', 'Morning', 'Afternoon', 'Evening', 'Late Night'])
+
+# Risk score logic with "All" selection handling
 def calculate_risk_score(df, age, gender, descent, location, time_of_day):
-    filtered = df[
-        (df['Vict Sex'] == gender) &
-        (df['Vict Descent'] == descent) &
-        (df['AREA NAME'] == location) &
-        (df['Time of Day'] == time_of_day) &
-        (df['Vict Age'].between(age - 5, age + 5))
-    ]
+    filtered = df.copy()
+    
+    # Apply filters only if they are not "All"
+    if gender != 'All':
+        filtered = filtered[filtered['Vict Sex'] == gender]
+    if descent != 'All':
+        filtered = filtered[filtered['Vict Descent'] == descent]
+    if location != 'All':
+        filtered = filtered[filtered['AREA NAME'] == location]
+    if time_of_day != 'All':
+        filtered = filtered[filtered['Time of Day'] == time_of_day]
+    filtered = filtered[filtered['Vict Age'].between(age - 5, age + 5)]
+    
     total_incidents = df.shape[0]
     filtered_count = filtered.shape[0]
     score = int((filtered_count / total_incidents) * 1000)  # scaled score
@@ -94,3 +101,4 @@ if not filtered_df.empty:
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No matching crimes to show a trend.")
+
